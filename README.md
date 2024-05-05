@@ -1,4 +1,4 @@
-# schedule-vms-with-kubevirt"
+# schedule-vms-with-kubevirt
 [Kubevirt](https://kubevirt.io/) opens a wide variety of options to bring up virtual machines on Kubernetes. This example demonstrates using KubeVirt to deploy a set of VMs across nodes. If you are on a cloud provider, you may want to run the VMs only on certain time windows to save costs. We can use Kubernetes `CronJobs` to schedule VMs to run during office hours and shut them down automatically after hours. For example, shut down all the VM in the `dev` namespace after 6 PM and bring them back up at 8 AM the next day.
 
 We will be using KubeVirt [VMPools](https://kubevirt.io/user-guide/virtual_machines/pool/) with 3 replicas of Nginx instances. We will then define a `CronJob` that runs at 6 PM daily to stop the `VM`s and another one that runs at 8 AM to recreate it.
