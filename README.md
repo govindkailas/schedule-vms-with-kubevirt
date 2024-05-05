@@ -1,10 +1,10 @@
 # schedule-vms-with-kubevirt"
-[Kubevirt](https://kubevirt.io/) opens a wide verity of options to bring up virtual machines on Kubernetes. This example demonstrates how to use KubeVirt to deploy a set of VMs across nodes. If you are on a cloud provider, you may want to run the VMs only on certain time windows to save costs. We can make use of Kubernetes `CronJobs` to schedules VMs to run during office hours and shut them down automatically after hours. For example, shutdown all the vm in the `dev` namespace after 6PM and bring them back up at 8AM next day.
+[Kubevirt](https://kubevirt.io/) opens a wide variety of options to bring up virtual machines on Kubernetes. This example demonstrates using KubeVirt to deploy a set of VMs across nodes. If you are on a cloud provider, you may want to run the VMs only on certain time windows to save costs. We can use Kubernetes `CronJobs` to schedule VMs to run during office hours and shut them down automatically after hours. For example, shut down all the VM in the `dev` namespace after 6 PM and bring them back up at 8 AM the next day.
 
-We will be using KubeVirt [VMPools](https://kubevirt.io/user-guide/virtual_machines/pool/) with 3 replicas of Nginx instances. We will then define a `CronJob` that runs at 6PM daily to stop the `VM`s and another one that runs at 8AM to recreate it.
+We will be using KubeVirt [VMPools](https://kubevirt.io/user-guide/virtual_machines/pool/) with 3 replicas of Nginx instances. We will then define a `CronJob` that runs at 6 PM daily to stop the `VM`s and another one that runs at 8 AM to recreate it.
 
 ## Pre-requisites
-You should have a Kubernetes cluster with cluster admin access, especially apiserver must have `--allow-privileged=true`. KubeVirt should also be installed and configured on the cluster. You may find the installation steps [here](https://kubevirt.io/user-guide/operations/installation/).
+You should have a Kubernetes cluster with cluster-admin access, especially apiserver must have `--allow-privileged=true`. KubeVirt should also be installed and configured on the cluster. You may find the installation steps [here](https://kubevirt.io/user-guide/operations/installation/).
 
 
 ## Cloud-init configs 
@@ -26,7 +26,7 @@ k apply -f cloud-init-with-nginx-secret.yaml
 ```
 k apply -f vmpool-nginx.yaml
 ```
-As mentioned in the VM pool manifest, it's downloading the Ubuntu image from https://cloud-images.ubuntu.com/jammy/20240403/jammy-server-cloudimg-amd64.img and store it as a  data volume (a kubevirt abstraction of PVC) to attach to the VMs. 
+As mentioned in the VM pool manifest, it downloads the Ubuntu image from https://cloud-images.ubuntu.com/jammy/20240403/jammy-server-cloudimg-amd64.img and stores it as a  data volume (a kubevirt abstraction of PVC) to attach to the VMs. 
 
 To check the status of related resources, 
 ```
@@ -49,7 +49,7 @@ datavolume.cdi.kubevirt.io/vmpool-nginx-0   Succeeded   100.0%     1          4m
 datavolume.cdi.kubevirt.io/vmpool-nginx-1   Succeeded   100.0%     1          4m
 datavolume.cdi.kubevirt.io/vmpool-nginx-2   Succeeded   100.0%     1          4m
 ```
-Notice that the VirtualMachineInstance (VMI)s are spred across nodes as mentioned in the VM pool manifest. Dont forget to check out the `podAntiAffinity` rule mentioned in the yaml.
+Notice that the VirtualMachineInstance (VMI)s are spread across nodes as mentioned in the VM pool manifest. Don't forget to check out the `podAntiAffinity` rule mentioned in the yaml.
 
 Now, ssh to one of the vm using `virtctl` and check if Nginx is working as expected,
 
@@ -63,14 +63,14 @@ Hello KubeVirts!!, I am being served from vmpool-nginx-0
 ```
 
  ## Accessing Kubernetes objects from within a Pod
- A question would arise in the mind on why the rolebinding is needed? Before that, we need to understand how does a pod get access to `kube-api`. Each pod gets a service account (usually the default service account from the namespace) token mounted which has certain `RBAC` permissions. Inside the pod, token is mounted under `/var/run/secrets/kubernetes.io/serviceaccount`. `Kubectl` and `virtctl` cli can use this token to talk to API server. More details regarding how to access Kubernetes API server from a Pod is [explained here ](https://kubernetes.io/docs/tasks/run-application/access-api-from-pod/). So we need to ensure this service account has the required permissions to manage KubeVirt resources like VMs.
+ A question would arise in mind on why the role binding is needed. Before that, we need to understand how does a pod get access to `kube-api`. Each pod gets a service account (usually the default service account from the namespace) token mounted which has certain `RBAC` permissions. Inside the pod, the token is mounted under `/var/run/secrets/kubernetes.io/serviceaccount`. `Kubectl` and `virtctl` cli can use this token to talk to the API server. More details regarding how to access Kubernetes API server from a Pod is [explained here ](https://kubernetes.io/docs/tasks/run-application/access-api-from-pod/). So we need to ensure this service account has the required permissions to manage KubeVirt resources like VMs.
 
 
 Some pointers to consider:
  - A container image with kubectl and virtctl installed, using the [image from here](https://github.com/govindkailas/kubectl-virtctl/pkgs/container/kubectl-virtctl)
  - Service account with access to KubeVirt CRDs and [rolebinding](kubevirt-rolebinding.yaml)
 
-KubeVirt already has `ClusterRole` called `kubevirt.io:edit` that allows managing VM related objects. More [details here](https://kubevirt.io/user-guide/operations/authorization/#default-edit-role). We can bind this role to the default service account in the current namespace:
+KubeVirt already has `ClusterRole` called `kubevirt.io:edit` that allows managing VM-related objects. More [details here](https://kubevirt.io/user-guide/operations/authorization/#default-edit-role). We can bind this role to the default service account in the current namespace:
 
 Apply the `RoleBinding` for the `default` service account:
 ```
@@ -136,4 +136,4 @@ vmpool-nginx-1   1h    Running   True
 vmpool-nginx-2   1h    Running   True
 ``` 
 
-*If you have any questions, suggestions, please open an issue.*
+*If you have any questions or suggestions, please open an issue.*
