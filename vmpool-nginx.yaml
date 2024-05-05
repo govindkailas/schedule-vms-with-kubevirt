@@ -1,0 +1,80 @@
+apiVersion: pool.kubevirt.io/v1alpha1
+kind: VirtualMachinePool
+metadata:
+  name: vmpool-nginx
+  namespace: dev
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: vmpool-nginx
+  virtualMachineTemplate:
+    metadata:
+      labels:
+        app: vmpool-nginx
+    spec:
+      instancetype:
+        kind: VirtualMachineClusterInstancetype
+        name: u1.small
+      preference:
+        kind: VirtualMachineClusterPreference
+        name: ubuntu
+      runStrategy: Always
+      template:
+        metadata:
+          labels:
+            app: vmpool-nginx
+        spec:
+          affinity:
+            podAntiAffinity: ## set the anti-affinity rule to spread the pods across nodes
+              preferredDuringSchedulingIgnoredDuringExecution: ## pods will be scheduled on the same node only if replicas > nodes
+              - weight: 100
+                podAffinityTerm:
+                  labelSelector:
+                    matchExpressions:
+                    - key: app
+                      operator: In
+                      values:
+                      - vmpool-nginx
+                  topologyKey: kubernetes.io/hostname   
+          domain:
+            devices:
+              disks:
+              - disk:
+                  bus: virtio
+                name: disk1
+              - disk:
+                  bus: virtio
+                name: cloudinitdisk
+              interfaces:
+              - masquerade: {}
+                name: default
+            machine:
+              type: ""
+          networks:
+          - name: default
+            pod: {}
+          terminationGracePeriodSeconds: 0
+          volumes:
+          - name: disk1
+            dataVolume:
+              name: vmpool-nginx
+          - name: cloudinitdisk
+            cloudInitNoCloud:
+              secretRef: 
+                name: cloudinit-with-nginx-secret ## reference the secret with cloud-init script
+      dataVolumeTemplates:
+      - metadata:
+          name: vmpool-nginx
+        spec:
+          pvc:
+            storageClassName: rook-ceph-block ## use your storage class that supports block volumes
+            volumeMode: Block
+            accessModes:
+            - ReadWriteMany ## you can use RWO but that would limit the live migration feature
+            resources:
+              requests:
+                storage: 3Gi
+          source:
+            http:
+              url: https://cloud-images.ubuntu.com/jammy/20240403/jammy-server-cloudimg-amd64.img

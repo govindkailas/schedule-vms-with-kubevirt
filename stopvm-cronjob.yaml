@@ -1,0 +1,23 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: stop-vm
+  namespace: dev
+spec:
+  schedule: "0 18 * * 1-5" ## Run at 6:00 PM PST M-F
+  timeZone: "US/Pacific"
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+          - name: stop-vm
+            image: ghcr.io/govindkailas/kubectl-virtctl:main
+            imagePullPolicy: Always
+            command: ["/bin/sh","-c"]
+            args:
+              - |
+                for vm  in $(kubectl get vm -o jsonpath='{.items[*].metadata.name}') ; do
+                  virtctl stop "$vm"
+                  done
+          restartPolicy: OnFailure
