@@ -61,6 +61,12 @@ spec:
               name: vmpool-nginx
           - name: cloudinitdisk
             cloudInitNoCloud:
+              networkData: |-
+                network:
+                  version: 2
+                  ethernets:
+                    enp1s0:
+                      dhcp4: true
               secretRef: 
                 name: cloudinit-with-nginx-secret ## reference the secret with cloud-init script
       dataVolumeTemplates:
